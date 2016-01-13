@@ -1,0 +1,108 @@
+/* __ 8 chan relay w/ps2keyboard controller __   
+   
+  ______        ___                   
+ /  __  \  ____ |  |__ _____    ____  
+ >      <_/ ___\|  |  \\__  \  /    \ 
+/   --   \  \___|   Y  \/ __ \|   |  \
+\______  /\___  >___|  (____  /___|  /
+       \/     \/     \/     \/     \/   
+                    .__                
+     _______   ____ |  | _____  ___.__.
+     \_  __ \_/ __ \|  | \__  \<   |  |
+      |  | \/\  ___/|  |__/ __ \\___  |
+      |__|    \___  >____(____  / ____|
+                  \/          \/\/     
+              /\              ________  __                 ___.                          .___ 
+__  _  __    / / ______  _____\_____  \|  | __ ____ ___.__.\_ |__   _________ _______  __| _/ 
+\ \/ \/ /   / /  \____ \/  ___//  ____/|  |/ // __ <   |  | | __ \ /  _ \__  \\_  __ \/ __ |  
+ \     /   / /   |  |_> >___ \/       \|    <\  ___/\___  | | \_\ (  <_> ) __ \|  | \/ /_/ |  
+  \/\_/   / /    |   __/____  >_______ \__|_ \\___  > ____| |___  /\____(____  /__|  \____ |  
+          \/     |__|       \/        \/    \/    \/\/          \/           \/           \/ 
+
+hardware: ups, 8 channel relay module, arduino uno, ps2 keyboard & usb/ps2 jacks  
+
+code jerkey & ~r
+
+:P
+
+*/
+
+/*-----( Import needed libraries )-----*/
+
+#include <PS2Keyboard.h>   // import PS2Keyboard library
+
+/*-----( Declare Constants )-----*/
+
+#define TIMEOUT 250 // time in ms since last time a button was being pressed
+
+/*-----( Declare objects )-----*/
+
+PS2Keyboard keyboard;   // call PS2Keyboard into program
+
+/*-----( Declare Variables )-----*/
+
+byte relayPins[8] = {4, 5, 6, 7, 8, 9, 10, 11};   //   declare relayPins as pins 4,5,6,7,8... 
+
+const int DataPin = 12;   // declare non-modifiable DataPin (data) from ps2keyboard
+const int IRQpin =  3;    // declare non-modifiable IRQpin (clock) from ps2keyboard
+
+void setup()   /****** SETUP: RUNS ONCE ******/
+{
+  delay(1000);   // delay & start keyboard serial
+  keyboard.begin(DataPin, IRQpin);
+  Serial.begin(115200);
+  for (byte i = 0; i < 8; i++) {
+    digitalWrite(relayPins[i],HIGH); // make relay be off by default
+    pinMode(relayPins[i], OUTPUT);
+  }    
+}//--(end setup )---
+
+  unsigned long lastPress = 0;
+
+  void loop()   /****** LOOP: RUNS CONSTANTLY ******/
+  {
+    if (keyboard.available()) {
+
+      // read the next key
+      char c = keyboard.read();
+      Serial.println((byte)c);
+
+      // read keyboard & set key
+      if (c == 49) {             // if keyboard reads 49 ("1" on keyboard)   
+        keyPressed(1);            // set 49 to (byte) relay 1        
+      } else if (c == 50) {      // if keyboard reads 50 ("2" on keyboard) 
+        keyPressed(2);            // set 50 to (byte) relay 2        
+      } else if (c == 51) {      // if keyboard reads 51 ("3" on keyboard)   
+        keyPressed(3);            // set 51 to (byte) relay 3        
+      } else if (c == 52) {      // if keyboard reads 52 ("4" on keyboard)
+        keyPressed(4);            // set 52 to (byte) relay 4        
+      } else if (c == 53) {      // if keyboard reads 53 ("5" on keyboard)
+        keyPressed(5);            // set 53 to (byte) relay 5        
+      } else if (c == 54) {      // if keyboard reads 54 ("6" on keyboard)
+        keyPressed(6);            // set 54 to (byte) relay 6        
+      } else if (c == 55) {      // if keyboard reads 55 ("7" on keyboard)
+        keyPressed(7);            // set 55 to (byte) relay 7        
+      } else if (c == 56) {      // if keyboard reads 56 ("8" on keyboard)
+        keyPressed(8);            // set 56 as (byte) relay 8        
+      } else {
+        Serial.println("key not assigned");
+        // esc is 27 on keyboard
+      }
+    }
+  }
+
+  void keyPressed(byte keyChar) {
+    if (millis() - lastPress > TIMEOUT) {
+      Serial.print("key ");
+      Serial.println(keyChar);
+      flipRelay(keyChar - 1);
+    }
+    lastPress = millis();
+  }
+
+  void flipRelay(byte relayNum) {
+    digitalWrite(relayPins[relayNum], !digitalRead(relayPins[relayNum]));
+  }
+
+
+  //*********( THE END )***********
